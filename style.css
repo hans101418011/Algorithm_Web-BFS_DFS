@@ -1,0 +1,26 @@
+@charset "utf-8";
+
+
+svg {
+	display: block;
+	margin: 10px;
+	padding: 10px;
+	border: 1px solid hsl(210,0%,30%);
+}
+
+input {
+	width: 40pt;
+	text-align: center;
+}
+
+div#setup {
+	display: inline-block;
+  vertical-align: top;
+	margin: 5px;
+	padding: 5px;
+	border: 1px solid hsl(200,70%,40%);
+}
+
+div#setup * {
+	margin: 3px;
+}
