@@ -172,8 +172,13 @@
 	//console.log(JSON.stringify(dataBFS));
 	//console.log(JSON.stringify(dataDFS));
 
+/*
+============================================================================================
 
+	Create BFS Graph 
 
+============================================================================================
+*/
 
 	var width = 600,
 	    height = 500;
@@ -187,7 +192,10 @@
 		.attr("id", "BFS")
 	    .attr("width", width)
 	    .attr("height", height);
-
+	var BFStext = svg_BFS.append("text")
+		.attr("font-size","20px")
+		.attr("font-family", "monospace")
+		.text("BFS");
 
 	var graph = dataBFS;
 
@@ -231,8 +239,13 @@
 	    gnodes.attr("transform",function(d){return 'translate('+[d.x, d.y]+')';});
 	  });
 
+
 /*
-=====================================================================================================
+============================================================================================
+
+	Create DFS Graph 
+
+============================================================================================
 */
 	function draw_graph2(){
 		var width = 600,
@@ -245,9 +258,14 @@
 
 
 		var svg_DFS = d3.select("#sketchpad").append("svg")
-		.attr("id", "DFS")
-	    .attr("width", width)
-	    .attr("height", height);
+			.attr("id", "DFS")
+		    .attr("width", width)
+		    .attr("height", height);
+		var DFStext = svg_DFS.append("text")
+			.attr("font-size","20px")
+			.attr("font-family", "monospace")
+			.text("DFS");
+
 
 		 var graph2 = dataDFS;
 
