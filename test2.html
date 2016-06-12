@@ -1,0 +1,175 @@
+<html>
+<script>
+function draw_graphs(graphs){
+
+var color = d3.scale.category20();
+
+var force;
+var div;
+var svg;
+var graph;
+var link;
+var node;
+var width = 360;
+var height = 360;
+var brush = new Array();
+var shiftKey;
+
+
+//loop through the different subsystems in the json-file
+for(name_subsystem in graphs) {
+//add a div for each subsystem
+div = document.createElement("div");
+div.style.width = "360px";
+div.style.height = "360px";
+div.style.cssFloat="left";
+div.id = name_subsystem;
+
+document.body.appendChild(div); 
+
+
+//force is called. all attributes with default values are noted. see API reference on github.
+force = d3.layout.force()
+    .size([width, height])
+    .linkDistance(20)
+    .linkStrength(1)
+    .friction(0.9)
+    .charge(-30)
+    .theta(0.8)
+    .gravity(0.1);
+
+div.appendChild(document.createTextNode(name_subsystem));
+
+//create the svg rectangle in which other elements can be visualised
+svg = d3.select("#"+name_subsystem)
+    .on("keydown.brush", keydown)
+    .on("keyup.brush", keyup)
+  .append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("id",name_subsystem); 
+
+brush = svg.append("g")
+    .datum(function() { return {selected: false, previouslySelected: false}; })
+    .attr("class", "brush"); 
+
+//force is started
+force
+    .nodes(graphs[name_subsystem].nodes)
+    .links(graphs[name_subsystem].links)
+    .start();
+
+//link elements are called, joined with the data, and links are created for each link object in links
+link = svg.selectAll(".link")
+    .data(graphs[name_subsystem].links)
+    .enter().append("line")
+    .attr("class", "link")
+    .style("stroke-width", function(d) { return Math.sqrt(d.thickness); })
+    .style("stroke", function(d){
+        if (d.linktype === 'reactant'){
+            return "black";
+        } else {
+            return "red";
+        }
+    });
+
+//node elements are called, joined with the data, and circles are created for each node object in nodes
+node = svg.selectAll(".node")
+    .data(graphs[name_subsystem].nodes)
+    .enter().append("circle")
+    .attr("class", "node")
+    //radius
+    .attr("r", 5)
+    //fill
+    .attr("fill", function(d) {
+        if (d.type === 'metabolite') {
+            return "blue";
+        } else {
+            return "red";
+        }
+    })
+    .on("mousedown", function(d) {
+        if (!d.selected) { // Don't deselect on shift-drag.
+            if (!shiftKey) node.classed("selected", function(p) { return p.selected = d === p; });
+        else d3.select(this).classed("selected", d.selected = true);
+        }
+    })
+    .on("mouseup", function(d) {
+        if (d.selected && shiftKey) d3.select(this).classed("selected", d.selected = false);
+    })
+    .call(force.drag()
+        .on("dragstart",function dragstart(d){
+            d.fixed=true;
+            d3.select(this).classed("fixed",true);
+        })
+    );
+
+
+//gives titles to nodes. i do not know why this is separated from the first node calling.
+node.append("title")
+    .text(function(d) { return d.name; });
+
+//enable brushing of the network
+brush.call(d3.svg.brush()
+    .x(d3.scale.identity().domain([0, width]))
+    .y(d3.scale.identity().domain([0, height]))
+    .on("brushstart", function(d) {
+        node.each(function(d) { d.previouslySelected = shiftKey && d.selected; });
+    })
+    .on("brush", function() {
+        var extent = d3.event.target.extent();
+        node.classed("selected", function(d) {
+            return d.selected = d.previouslySelected ^
+            (extent[0][0] <= d.x && d.x < extent[1][0]
+            && extent[0][1] <= d.y && d.y < extent[1][1]);
+        });
+    })
+    .on("brushend", function() {
+        d3.event.target.clear();
+        d3.select(this).call(d3.event.target);
+    })
+);
+
+//applies force per step or 'tick'. 
+force.on("tick", function() {
+    link.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+    node.attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
+});
+//with this it works partly
+//for (var i = 0; i < 5000; ++i)force[count].tick();
+};
+
+function keydown() {
+if (!d3.event.metaKey) switch (d3.event.keyCode) {
+case 38: nudge( 0, -1); break; // UP
+case 40: nudge( 0, +1); break; // DOWN
+case 37: nudge(-1,  0); break; // LEFT
+case 39: nudge(+1,  0); break; // RIGHT
+}
+shiftKey = d3.event.shiftKey || d3.event.metaKey;
+}
+
+function keyup() {
+shiftKey = d3.event.shiftKey || d3.event.metaKey;
+}
+
+}
+</script>
+
+
+<script>
+$(document).ready(function() {
+draw_graphs("pass here the json file");
+
+
+// this will drawn 2nd graph after 1 second.              
+var t = setTimeout(function(){
+draw_graphs("pass here json file");
+}, 1000)
+
+});

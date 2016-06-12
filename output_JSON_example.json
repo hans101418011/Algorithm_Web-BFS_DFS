@@ -1,0 +1,32 @@
+{
+	"nodes":[
+		{"lable":"A","target":null,"level":-1,"statu":0},
+		{"lable":"B","target":null,"level":-1,"statu":0},
+		{"lable":"C","target":null,"level":-1,"statu":0},
+		{"lable":"D","target":null,"level":-1,"statu":0},
+		{"lable":"E","target":null,"level":-1,"statu":0},
+		{"lable":"F","target":null,"level":-1,"statu":0},
+		{"lable":"G","target":null,"level":-1,"statu":0},
+		{"lable":"H","target":null,"level":-1,"statu":0}
+	],
+	"links":[
+		{"source":0,"target":5,"value":1},
+		{"source":0,"target":4,"value":1},
+		{"source":1,"target":6,"value":1},
+		{"source":1,"target":7,"value":1},
+		{"source":2,"target":6,"value":1},
+		{"source":2,"target":4,"value":1},
+		{"source":2,"target":7,"value":1},
+		{"source":2,"target":5,"value":1},
+		{"source":3,"target":2,"value":1},
+		{"source":3,"target":1,"value":1},
+		{"source":4,"target":7,"value":1},
+		{"source":4,"target":2,"value":1},
+		{"source":5,"target":6,"value":1},
+		{"source":5,"target":2,"value":1},
+		{"source":6,"target":5,"value":1},
+		{"source":6,"target":2,"value":1},
+		{"source":7,"target":5,"value":1},
+		{"source":7,"target":2,"value":1}
+	]
+}

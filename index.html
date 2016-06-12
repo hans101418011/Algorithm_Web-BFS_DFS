@@ -9,7 +9,6 @@
 	<script type="text/javascript" src="./d3.min.js"></script>
 </head>
 <body>
-	<button type="button" onclick="drawG(this);">產生圖形</button>
 
 	<div id="sketchpad"></div>
 	<script>
@@ -26,9 +25,9 @@
 		this.value = value;
 	}
 
-	var nodeNum = 10;
+	var NodeNum = 6;
 	var gjsonObj = [];
-	for (var i = 0; i < nodeNum ; i++) {
+	for (var i = 0; i < NodeNum ; i++) {
 		var temp = new node(String.fromCharCode(65+i),null,-1,0);
 		gjsonObj.push(temp);
 	};
@@ -38,22 +37,28 @@
 
 
 	var ljsonObj = [];
-	for(var i = 0; i < nodeNum ; i++){
+	for(var i = 0; i < NodeNum ; i++){
 		var tempArr = [];
+		var t;
 		do{
-			var t = Math.floor((Math.random() * nodeNum));
+			t = Math.floor((Math.random() * NodeNum));
 		}while(t==i);
 		tempArr.push(t);
+		do{
+			t = Math.floor((Math.random() * 1000))%NodeNum;
+		}while(t==i || tempArr.indexOf(t)!=-1);
+		tempArr.push(t);
 
-		while(Math.floor((Math.random()*10 > 7))){
+
+		while(Math.floor((Math.random()*10 > 8))){
 			do{
-				var t = Math.floor((Math.random() * 1000))%10;
+				var t = Math.floor((Math.random() * 1000))%NodeNum;
 			}while(t==i || tempArr.indexOf(t)!=-1);
 			tempArr.push(t);
 		}
 		var tt;
 		for (var j = 0; j < tempArr.length; j++) {
-			var temp = new link(i,tempArr[j],1);
+			var temp = new link(i,tempArr[j],5);
 			ljsonObj.push(temp);
 		}
 		tempArr = [];
@@ -65,20 +70,107 @@
 	var dataObj = {};
 	dataObj.nodes = gjsonObj;
 	dataObj.links = ljsonObj;
-	var dataJSON = JSON.stringify(dataObj);
-	console.log(dataObj);
-	console.log(dataJSON);
+	
+	//console.log(dataObj);
+	//console.log(dataJSON);
 
 	var tempQuery = [];
-	var startNum = Math.floor((Math.random() * nodeNum));
+	var startNum = Math.floor((Math.random() * NodeNum));
 	var startNode = String.fromCharCode(65+startNum);
 	dataObj.nodes[startNum].level = 0;
 
-	var dataBFS = dataObj;
+	var dataJSON = JSON.stringify(dataObj);
+	console.log("Start Node:" +startNode);
+
+/*
+============================================================================================
+
+	BFS
+
+============================================================================================
+*/
+	var dataBFS = JSON.parse(dataJSON);
+	//console.log(JSON.stringify(dataBFS));
+
 	function BFS(){
+		var tQueue = [];
+		//console.log(startNum);
+		tQueue.push(startNum);
+		while(tQueue.length){
+			console.log("Queuet:"+tQueue);
+			var dequere = tQueue.shift();
 
+			//console.log(String.fromCharCode(65+dequere));
+			dataBFS.nodes[dequere].statu = 2;
+
+			for(var i=0;i<(dataBFS.links).length;i++){
+				if(dequere == dataBFS.links[i].source){
+					var c = dataBFS.links[i].target;
+					if(dataBFS.nodes[c].statu == 0){
+						tQueue.push(c);
+						dataBFS.nodes[c].statu = 1;
+						dataBFS.links[i].value = 50;
+						dataBFS.nodes[c].level = dataBFS.nodes[dequere].level+1;
+					}
+				}else if(dequere == dataBFS.links[i].target){
+					var c = dataBFS.links[i].source;
+					if(dataBFS.nodes[c].statu == 0){
+						tQueue.push(c);
+						dataBFS.nodes[c].statu = 1;
+						dataBFS.links[i].value = 50;
+						dataBFS.nodes[c].level = dataBFS.nodes[dequere].level+1;
+					}
+				}
+			}
+		}
+		console.log("Queuet:"+tQueue);
 	}
+	BFS();
 
+/*
+============================================================================================
+
+	DFS
+
+============================================================================================
+*/
+	var dataDFS = JSON.parse(dataJSON);
+	function DFS(){
+		var sum = 0;
+		dataDFS.nodes[startNum].statu = 2;
+		function DFS_Visit(sNode){
+
+			sum++;
+			if(sum==NodeNum) return;
+			var c;
+			for(var i =0;i<(dataDFS.links).length;i++){
+				c = null;
+				if(sNode == dataDFS.links[i].source){
+					c = dataDFS.links[i].target;
+				}else if(sNode == dataDFS.links[i].target){
+					c = dataDFS.links[i].source;
+				}else{
+					continue;
+				}
+
+				if(dataDFS.nodes[c].statu == 0){
+					console.log(String.fromCharCode(65+c));
+					dataDFS.nodes[c].statu = 1;
+					dataDFS.links[i].value = 50;
+					dataDFS.nodes[c].level = sum;
+					console.log(dataDFS.nodes[c]);
+					DFS_Visit(c);
+					
+				}
+				dataDFS.nodes[c].statu = 2;
+			}
+			
+		}
+		DFS_Visit(startNum);
+	}
+	DFS();
+	//console.log(JSON.stringify(dataBFS));
+	//console.log(JSON.stringify(dataDFS));
 
 
 
@@ -87,46 +179,47 @@
 	    height = 500;
 
 	var force = d3.layout.force()
-	    .charge(-400)
-	    .linkDistance(100)
+	    .charge(-800)
+	    .linkDistance(150)
 	    .size([width, height]);
 
-	var svg = d3.select("#sketchpad").append("svg")
+	var svg_BFS = d3.select("#sketchpad").append("svg")
+		.attr("id", "BFS")
 	    .attr("width", width)
 	    .attr("height", height);
 
 
+	var graph = dataBFS;
 
-		var graph = dataBFS;
 
-	    force
-	        .nodes(graph.nodes)
-	        .links(graph.links)
-	        .start();
+    force
+        .nodes(graph.nodes)
+        .links(graph.links)
+        .start();
 
-	    var link = svg.selectAll(".link")
-	        .data(graph.links)
-	      .enter().append("line")
-	        .attr("class", "link")
-	        .style("stroke-width", function(d) { return Math.sqrt(d.value); });
+    var link = svg_BFS.selectAll(".link")
+        .data(graph.links)
+      .enter().append("line")
+        .attr("class", "link")
+        .style("stroke-width", function(d) { return Math.sqrt(d.value); });
 
-	    var gnodes = svg.selectAll('g.nodes')
-	      .data(graph.nodes)
-	      .enter()
-	      .append('g')
-	      .classed('gnode', true);
+    var gnodes = svg_BFS.selectAll('g.nodes')
+      .data(graph.nodes)
+      .enter()
+      .append('g')
+      .classed('gnode', true);
 
-	    var node = gnodes.append("circle")
-	      .attr("class", "node")
-	      .attr("r", 20)
-	      .style("fill", "lightskyblue")
-	      .call(force.drag);
+    var node = gnodes.append("circle")
+      .attr("class", "node")
+      .attr("r", 20)
+      .style("fill", "lightskyblue")
+      .call(force.drag);
 
-	    var labels = gnodes.append("text")
-	      .attr("font-size", "14px")
-	      .attr("font-family", "monospace")
-	      .attr("text-anchor", "middle")
-	      .text(function(d) { return d.lable; });
+    var labels = gnodes.append("text")
+      .attr("font-size", "14px")
+      .attr("font-family", "monospace")
+      .attr("text-anchor", "middle")
+      .text(function(d) { return d.lable + "/" +d.level; });
 
 
 	  force.on("tick", function() {
@@ -138,6 +231,65 @@
 	    gnodes.attr("transform",function(d){return 'translate('+[d.x, d.y]+')';});
 	  });
 
+/*
+=====================================================================================================
+*/
+	function draw_graph2(){
+		var width = 600,
+			height = 500;
+
+		var force2 = d3.layout.force()
+		    .charge(-800)
+		    .linkDistance(150)
+		    .size([width, height]);
+
+
+		var svg_DFS = d3.select("#sketchpad").append("svg")
+		.attr("id", "DFS")
+	    .attr("width", width)
+	    .attr("height", height);
+
+		 var graph2 = dataDFS;
+
+		force2
+	        .nodes(graph2.nodes)
+	        .links(graph2.links)
+	        .start();
+
+	    var link2 = svg_DFS.selectAll(".link")
+	        .data(graph2.links)
+	        .enter().append("line")
+	        .attr("class", "link")
+	        .style("stroke-width", function(d) { return Math.sqrt(d.value); });
+
+	    var gnodes2 = svg_DFS.selectAll('g.nodes')
+	      .data(graph2.nodes)
+	      .enter()
+	      .append('g')
+	      .classed('gnode', true);
+
+	    var node2 = gnodes2.append("circle")
+	      .attr("class", "node")
+	      .attr("r", 20)
+	      .style("fill", "lightskyblue")
+	      .call(force.drag);
+
+	    var labels2 = gnodes2.append("text")
+	      .attr("font-size", "14px")
+	      .attr("font-family", "monospace")
+	      .attr("text-anchor", "middle")
+	      .text(function(d) { return d.lable + "/" +d.level; });
+
+		force2.on("tick", function() {
+		    link2.attr("x1", function(d) { return d.source.x; })
+		    	.attr("y1", function(d) { return d.source.y; })
+		        .attr("x2", function(d) { return d.target.x; })
+		        .attr("y2", function(d) { return d.target.y; });
+		    gnodes2.attr("transform",function(d){return 'translate('+[d.x, d.y]+')';});
+		 });
+	}
+	var t = setTimeout(function(){ draw_graph2();}, 2500);
+	 
 	
 
 	</script>
